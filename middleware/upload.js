@@ -3,12 +3,13 @@ const path = require("path");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "../media_upload/images");
+    cb(null, "uploads/images");
   },
   filename: (req, file, cb) => {
-    const ext = file.mimetype.split("/")[1];
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, file.fieldname + "-" + uniqueSuffix + "." + ext);
+    const timestamp = new Date().toISOString().slice(0, 16).replace(":", "-");
+    const uniqueSuffix =
+      "image" + "-" + timestamp + "-" + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
   },
 });
 

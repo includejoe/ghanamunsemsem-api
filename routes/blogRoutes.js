@@ -43,14 +43,24 @@ router.post(
   async (req, res) => {
     try {
       const { authorId, title, body } = req.body;
-      const imageUrl = req.file.filename;
+      const imageUrl = req.file.destination + "/" + req.file.filename;
 
       if (req.author.id === authorId) {
         if (body.trim() === "") {
-          return res.status(400).json({
+          return res.status(422).json({
             errors: [
               {
                 msg: "Blog Must Not be empty",
+              },
+            ],
+          });
+        }
+
+        if (title.trim() === "") {
+          return res.status(422).json({
+            errors: [
+              {
+                msg: "Title must not be empty",
               },
             ],
           });
@@ -81,14 +91,28 @@ router.post(
   }
 );
 
-// // delete blog
-// router.delete("/:id", checkAuth, async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const blog = await Blog.findById();
-//   } catch (err) {
-//     throw new Error(err);
-//   }
-// });
+// delete blog
+router.delete("/:id", checkAuth, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const blog = await Blog.findById(id);
+    if (req.author.id === blog.authorId) {
+      await Blog.delete();
+      res.status(200).json({
+        msg: "Post deleted successfully",
+      });
+    } else {
+      return res.status(400).json({
+        errors: [
+          {
+            msg: "Action Not Allowed",
+          },
+        ],
+      });
+    }
+  } catch (err) {
+    throw new Error(err);
+  }
+});
 
 module.exports = router;
