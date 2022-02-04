@@ -3,8 +3,10 @@ const { check, validationResult } = require("express-validator");
 const bcrypt = require("bcrypt");
 const JWT = require("jsonwebtoken");
 
+const upload = require("../middleware/uploadAuthorProfileImage");
 const Author = require("../models/author");
 const { SECRET_KEY } = require("../config");
+const checkAuth = require("../middleware/checkAuth");
 
 function generateToken(author) {
   return JWT.sign(
@@ -35,53 +37,65 @@ router.post(
     }),
   ],
   async (req, res) => {
-    const { firstname, lastname, email, password, confirmPassword } = req.body;
+    try {
+      const { firstname, lastname, email, password, confirmPassword } =
+        req.body;
 
-    // validate input
-    const errors = validationResult(req);
+      // validate input
+      const errors = validationResult(req);
 
-    if (!errors.isEmpty()) {
-      return res.status(422).json({
-        errors: errors.array(),
+      if (!errors.isEmpty()) {
+        return res.status(422).send({
+          errors: errors.array(),
+        });
+      }
+
+      if (password !== confirmPassword) {
+        return res.status(422).send({
+          errors: [
+            {
+              msg: "Passwords must match",
+            },
+          ],
+        });
+      }
+
+      // validate if admin doesn't already exist
+      let author = await Author.findOne({ email });
+      if (author) {
+        return res.status(422).send({
+          errors: [
+            {
+              msg: "This author already exists",
+            },
+          ],
+        });
+      }
+
+      const hashedPassword = bcrypt.hashSync(password, 12);
+
+      const newAuthor = new Author({
+        firstname,
+        lastname,
+        email,
+        hashedPassword,
       });
-    }
 
-    if (password !== confirmPassword) {
-      return res.status(422).json({
+      const createdAuthor = await newAuthor.save();
+
+      const token = generateToken(createdAuthor);
+
+      res.json({ token });
+    } catch (err) {
+      res.status(500).send({
         errors: [
           {
-            msg: "Passwords must match",
+            msg: "Internal Server Error",
           },
         ],
       });
+      throw new Error(err);
     }
-
-    // validate if admin doesn't already exist
-    let author = await Author.findOne({ email });
-    if (author) {
-      return res.status(422).json({
-        errors: [
-          {
-            msg: "This author already exists",
-          },
-        ],
-      });
-    }
-
-    const hashedPassword = bcrypt.hashSync(password, 12);
-
-    const newAuthor = new Author({
-      firstname,
-      lastname,
-      email,
-      hashedPassword,
-    });
-
-    const createdAuthor = await newAuthor.save();
-
-    const token = generateToken(createdAuthor);
-
-    res.json({ token });
   }
 );
 
@@ -95,44 +109,86 @@ router.post(
     }),
   ],
   async (req, res) => {
-    const { email, password } = req.body;
+    try {
+      const { email, password } = req.body;
 
-    // validate input
-    const errors = validationResult(req);
+      // validate input
+      const errors = validationResult(req);
 
-    if (!errors.isEmpty()) {
-      return res.status(422).json({
-        errors: errors.array(),
-      });
-    }
+      if (!errors.isEmpty()) {
+        return res.status(422).send({
+          errors: errors.array(),
+        });
+      }
 
-    let author = await Author.findOne({ email });
+      let author = await Author.findOne({ email });
 
-    if (!author) {
-      return res.status(422).json({
+      if (!author) {
+        return res.status(422).send({
+          errors: [
+            {
+              msg: "Invalid credentials",
+            },
+          ],
+        });
+      }
+
+      let match = bcrypt.compareSync(password, author.hashedPassword);
+
+      if (!match) {
+        return res.status(422).send({
+          errors: [
+            {
+              msg: "Invalid credentials",
+            },
+          ],
+        });
+      }
+
+      const token = generateToken(author);
+
+      res.json({ token });
+    } catch (err) {
+      res.status(500).send({
         errors: [
           {
-            msg: "Invalid credentials",
+            msg: "Internal Server Error",
           },
         ],
       });
+      throw new Error(err);
     }
+  }
+);
 
-    let match = bcrypt.compareSync(password, author.hashedPassword);
+// upload profile picture
+router.post(
+  "/upload_profile",
+  [checkAuth, upload.single("profile_pic")],
+  async (req, res) => {
+    try {
+      const id = req.author;
+      const author = Author.findById(id);
 
-    if (!match) {
-      return res.status(422).json({
+      // delete old profile picture if there is any
+      if (author.profilePic) {
+        fs.unlink(author.profilePic, (err) => {
+          throw new Error(err);
+        });
+      }
+      const profilePic = "/" + req.file.destination + "/" + req.file.filename;
+      Object.assign(author, { profilePic });
+      author.save();
+    } catch (err) {
+      res.status(500).send({
         errors: [
           {
-            msg: "Invalid credentials",
+            msg: "Internal Server Error",
           },
         ],
       });
+      throw new Error(err);
     }
-
-    const token = generateToken(author);
-
-    res.json({ token });
   }
 );
 

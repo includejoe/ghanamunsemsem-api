@@ -24,13 +24,16 @@ mongoose
     return app.listen({ port: 8000 });
   })
   .then(() => {
-    console.log(`Server running at https://localhost:8000`);
+    console.log(`Server running at http://localhost:8000`);
   })
   .catch((err) => console.log(err));
 
 app.get("/", (req, res) => {
   res.send("Hi, this is local host port 8000");
 });
+
+// static files
+app.use("/uploads", express.static("uploads"));
 
 // auth routes
 app.use("/auth", authRoutes);

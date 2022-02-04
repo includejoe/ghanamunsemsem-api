@@ -22,7 +22,7 @@ module.exports = async (req, res, next) => {
     return res.status(400).json({
       errors: [
         {
-          msg: "Token Invalid",
+          msg: "Invalid/Expired Token",
         },
       ],
     });

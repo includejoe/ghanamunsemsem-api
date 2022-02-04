@@ -3,18 +3,23 @@ const Schema = mongoose.Schema;
 
 const blogSchema = new Schema(
   {
-    authorId: {
+    author: {
       type: Schema.Types.ObjectId,
       ref: "authors",
-    },
-    imageUrl: {
-      type: String,
-      required: true,
     },
     title: {
       type: String,
       required: true,
     },
+    category: {
+      type: String,
+      required: true,
+    },
+    imageUrl: {
+      type: String,
+      required: true,
+    },
+
     body: {
       type: String,
       required: true,
