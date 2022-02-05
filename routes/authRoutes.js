@@ -162,7 +162,7 @@ router.post(
 );
 
 // upload profile picture
-router.post(
+router.patch(
   "/upload_profile",
   [checkAuth, upload.single("profile_pic")],
   async (req, res) => {

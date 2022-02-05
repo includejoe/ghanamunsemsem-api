@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const fs = require("fs");
+const { check, validationResult } = require("express-validator");
 
 const Blog = require("../models/blog");
 const checkAuth = require("../middleware/checkAuth");
@@ -51,6 +52,37 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// blog categories
+router.get("/category:category", async (req, res) => {
+  try {
+    const { category } = req.params;
+    const blogs = await Blog.find({ category }).sort({
+      createdAt: -1,
+    });
+
+    if (!blogs) {
+      return res.status(404).send({
+        errors: [
+          {
+            msg: "No blogs in this category",
+          },
+        ],
+      });
+    }
+
+    res.json({ blogs });
+  } catch (err) {
+    res.status(500).send({
+      errors: [
+        {
+          msg: "Internal Server Error",
+        },
+      ],
+    });
+    throw new Error(err);
+  }
+});
+
 // AUTHENTICATION NEEDED
 
 // get a specific authors blogs
@@ -84,39 +116,23 @@ router.get("/my_blogs", checkAuth, async (req, res) => {
 // create a blog
 router.post(
   "/create",
-  [checkAuth, upload.single("image")],
+  [
+    checkAuth,
+    upload.single("image"),
+    check("title").notEmpty(),
+    check("category").notEmpty(),
+    check("body").notEmpty(),
+  ],
   async (req, res) => {
     try {
       const { author, title, category, body } = req.body;
       const imageUrl = "/" + req.file.destination + "/" + req.file.filename;
 
-      if (title.trim() === "") {
+      // validate input
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
         return res.status(422).send({
-          errors: [
-            {
-              msg: "Title must not be empty",
-            },
-          ],
-        });
-      }
-
-      if (category.trim() === "") {
-        return res.status(422).send({
-          errors: [
-            {
-              msg: "Category Must Not be empty",
-            },
-          ],
-        });
-      }
-
-      if (body.trim() === "") {
-        return res.status(422).send({
-          errors: [
-            {
-              msg: "Body Must Not be empty",
-            },
-          ],
+          errors: errors.array(),
         });
       }
 
@@ -191,9 +207,15 @@ router.delete("/:id", checkAuth, async (req, res) => {
 });
 
 // update blog details
-router.put(
+router.patch(
   "/update_blog",
-  [checkAuth, upload.single("image")],
+  [
+    checkAuth,
+    upload.single("image"),
+    check("title").notEmpty(),
+    check("category").notEmpty(),
+    check("body").notEmpty(),
+  ],
   async (req, res) => {
     try {
       const { id, author, title, category, body } = req.body;
@@ -209,33 +231,11 @@ router.put(
         });
       }
 
-      if (title.trim() === "") {
+      // validate input
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
         return res.status(422).send({
-          errors: [
-            {
-              msg: "Title must not be empty",
-            },
-          ],
-        });
-      }
-
-      if (category.trim() === "") {
-        return res.status(422).send({
-          errors: [
-            {
-              msg: "Category Must Not be empty",
-            },
-          ],
-        });
-      }
-
-      if (body.trim() === "") {
-        return res.status(422).send({
-          errors: [
-            {
-              msg: "Body Must Not be empty",
-            },
-          ],
+          errors: errors.array(),
         });
       }
 
