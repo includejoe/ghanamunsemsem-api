@@ -119,13 +119,26 @@ router.post(
   [
     checkAuth,
     upload.single("image"),
-    check("title").notEmpty(),
-    check("category").notEmpty(),
-    check("body").notEmpty(),
+    [
+      check("title", "Title Must not be empty").notEmpty(),
+      check("category", "Category Must not be empty").notEmpty(),
+      check("body", "Body Must not be empty").notEmpty(),
+    ],
   ],
   async (req, res) => {
     try {
-      const { author, title, category, body } = req.body;
+      const author = req.author.id;
+      const { title, category, body } = req.body;
+
+      if (!req.file) {
+        return res.status(422).send({
+          errors: [
+            {
+              msg: "Image submission error",
+            },
+          ],
+        });
+      }
       const imageUrl = "/" + req.file.destination + "/" + req.file.filename;
 
       // validate input
@@ -212,13 +225,16 @@ router.patch(
   [
     checkAuth,
     upload.single("image"),
-    check("title").notEmpty(),
-    check("category").notEmpty(),
-    check("body").notEmpty(),
+    [
+      check("title", "Title Must not be empty").notEmpty(),
+      check("category", "Category Must not be empty").notEmpty(),
+      check("body", "Body Must not be empty").notEmpty(),
+    ],
   ],
   async (req, res) => {
     try {
-      const { id, author, title, category, body } = req.body;
+      const author = req.author.id;
+      const { id, title, category, body } = req.body;
       const blog = await Blog.findById(id);
 
       if (!blog) {

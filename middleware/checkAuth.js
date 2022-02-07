@@ -15,8 +15,8 @@ module.exports = async (req, res, next) => {
   }
 
   try {
-    let author = JWT.verify(token, SECRET_KEY);
-    req.author = author;
+    const decoded = JWT.verify(token, SECRET_KEY);
+    req.author = decoded;
     next();
   } catch (err) {
     return res.status(400).json({
