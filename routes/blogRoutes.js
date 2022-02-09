@@ -24,7 +24,7 @@ router.get("/", async (req, res) => {
 });
 
 // get blog details
-router.get("/:id", async (req, res) => {
+router.get("/blog_details/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const blog = await Blog.findById(id);
@@ -53,7 +53,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // blog categories
-router.get("/category:category", async (req, res) => {
+router.get("/category/:category", async (req, res) => {
   try {
     const { category } = req.params;
     const blogs = await Blog.find({ category }).sort({
@@ -83,13 +83,13 @@ router.get("/category:category", async (req, res) => {
   }
 });
 
-// AUTHENTICATION NEEDED
+// PROTECTED ROUTES
 
 // get a specific authors blogs
 router.get("/my_blogs", checkAuth, async (req, res) => {
   try {
-    const author = req.author;
-    const blogs = await Blog.find({ author }).sort({ createdAt: -1 });
+    const author = req.author.id;
+    const blogs = await Blog.find({ author }).sort({ updatedAt: -1 });
 
     if (!blogs) {
       return res.status(422).send({
@@ -174,16 +174,15 @@ router.post(
 );
 
 // delete blog
-router.delete("/:id", checkAuth, async (req, res) => {
+router.delete("/delete_blog/:id", checkAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const author = req.author;
     const blog = await Blog.findById(id);
 
-    if (author.id === blog.author) {
-      await Blog.delete();
-      const { imageUrl } = blog;
-      fs.unlink(imageUrl, (err) => {
+    if (author.id == blog.author) {
+      const imageLink = "." + blog.imageUrl;
+      fs.unlink(imageLink, (err) => {
         if (err) {
           return res.status(500).send({
             errors: [
@@ -195,6 +194,7 @@ router.delete("/:id", checkAuth, async (req, res) => {
         }
       });
 
+      await blog.delete();
       res.status(200).json({
         msg: "Post deleted successfully",
       });
@@ -220,8 +220,8 @@ router.delete("/:id", checkAuth, async (req, res) => {
 });
 
 // update blog details
-router.patch(
-  "/update_blog",
+router.put(
+  "/update_blog/:id",
   [
     checkAuth,
     upload.single("image"),
@@ -234,8 +234,10 @@ router.patch(
   async (req, res) => {
     try {
       const author = req.author.id;
-      const { id, title, category, body } = req.body;
+      const { id } = req.params;
+      const { title, category, body } = req.body;
       const blog = await Blog.findById(id);
+      const imageLink = "." + blog.imageUrl;
 
       if (!blog) {
         return res.status(400).json({
@@ -247,6 +249,18 @@ router.patch(
         });
       }
 
+      fs.unlink(imageLink, (err) => {
+        if (err) {
+          return res.status(500).send({
+            errors: [
+              {
+                msg: "Blog image Deletion Error",
+              },
+            ],
+          });
+        }
+      });
+
       // validate input
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -255,31 +269,16 @@ router.patch(
         });
       }
 
-      if (req.file) {
-        const imageUrl = "/" + req.file.destination + "/" + req.file.filename;
-        const updatedBlog = {
-          id,
-          author,
-          title,
-          category,
-          imageUrl,
-          body,
-        };
+      const imageUrl = "/" + req.file.destination + "/" + req.file.filename;
+      const updatedBlog = await Blog.findByIdAndUpdate(id, {
+        author,
+        title,
+        category,
+        imageUrl,
+        body,
+      });
 
-        Object.assign(author, updatedBlog);
-        blog.save();
-      } else {
-        const updatedBlog = {
-          id,
-          author,
-          title,
-          category,
-          body,
-        };
-
-        Object.assign(author, updatedBlog);
-        blog.save();
-      }
+      res.json({ updatedBlog });
     } catch (err) {
       res.status(500).send({
         errors: [

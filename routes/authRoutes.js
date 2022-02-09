@@ -14,9 +14,10 @@ function generateToken(author) {
       id: author.id,
       firstname: author.firstname,
       lastname: author.lastname,
+      gender: author.gender,
     },
     SECRET_KEY,
-    { expiresIn: "1h" }
+    { expiresIn: "24h" }
   );
 }
 
@@ -31,6 +32,8 @@ router.post(
     check("lastname", "Last Name must not be more that 20 characters").isLength(
       { max: 20 }
     ),
+    check("gender", "Gender must not be empty").notEmpty(),
+    check("dob", "Date of birth must not be empty").notEmpty(),
     check("email", "Please provide a valid email").isEmail(),
     check("password", "Your password must be more than 6 characters").isLength({
       min: 6,
@@ -38,8 +41,15 @@ router.post(
   ],
   async (req, res) => {
     try {
-      const { firstname, lastname, email, password, confirmPassword } =
-        req.body;
+      const {
+        firstname,
+        lastname,
+        gender,
+        dob,
+        email,
+        password,
+        confirmPassword,
+      } = req.body;
 
       // validate input
       const errors = validationResult(req);
@@ -77,6 +87,8 @@ router.post(
       const newAuthor = new Author({
         firstname,
         lastname,
+        gender,
+        dob,
         email,
         hashedPassword,
       });
