@@ -5,12 +5,12 @@ const path = require("path");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/author_profile_images");
+    cb(null, "uploads/profile_images");
   },
   filename: (req, file, cb) => {
-    const { firstname, lastname } = req.body;
+    const { email } = req.author;
     const timestamp = new Date().toISOString().slice(0, 16).replace(":", "-");
-    const uniqueSuffix = firstname + "_" + lastname + timestamp;
+    const uniqueSuffix = email + "_" + timestamp;
     cb(null, uniqueSuffix + path.extname(file.originalname));
   },
 });

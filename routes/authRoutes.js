@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const { check, validationResult } = require("express-validator");
 const bcrypt = require("bcrypt");
+const fs = require("fs");
 const JWT = require("jsonwebtoken");
 
 const upload = require("../middleware/uploadAuthorProfileImage");
@@ -13,10 +14,8 @@ function generateToken(author) {
     {
       id: author.id,
       email: author.email,
-      dob: author.dob,
       firstname: author.firstname,
       lastname: author.lastname,
-      gender: author.gender,
     },
     SECRET_KEY,
     { expiresIn: "24h" }
@@ -24,7 +23,7 @@ function generateToken(author) {
 }
 
 // get author details
-router.get("author", checkAuth, async (req, res) => {
+router.get("/author", checkAuth, async (req, res) => {
   try {
     id = req.author.id;
     const author = await Author.findById(id);
@@ -199,7 +198,7 @@ router.put(
   "/update_profile",
   [
     checkAuth,
-    upload.single("profile_pic"),
+    upload.single("profilePic"),
     [
       check(
         "firstname",
@@ -211,13 +210,6 @@ router.put(
       ).isLength({ max: 20 }),
       check("gender", "Gender must not be empty").notEmpty(),
       check("dob", "Date of birth must not be empty").notEmpty(),
-      check("email", "Please provide a valid email").isEmail(),
-      check(
-        "newPassword",
-        "Your new password must be more than 6 characters"
-      ).isLength({
-        min: 6,
-      }),
     ],
   ],
   async (req, res) => {
