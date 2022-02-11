@@ -254,7 +254,7 @@ router.put(
           return res.status(500).send({
             errors: [
               {
-                msg: "Blog image Deletion Error",
+                msg: " Old blog image deletion error",
               },
             ],
           });
