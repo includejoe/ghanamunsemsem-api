@@ -64,7 +64,7 @@ router.get("/category/:category", async (req, res) => {
       return res.status(404).send({
         errors: [
           {
-            msg: "No blogs in this category",
+            msg: "No Blogs in this Category",
           },
         ],
       });
@@ -95,7 +95,7 @@ router.get("/my_blogs", checkAuth, async (req, res) => {
       return res.status(422).send({
         errors: [
           {
-            msg: "Can't find blogs",
+            msg: "No Blogs Found",
           },
         ],
       });
@@ -134,7 +134,7 @@ router.post(
         return res.status(422).send({
           errors: [
             {
-              msg: "Image submission error",
+              msg: "Image Submission Error",
             },
           ],
         });
@@ -187,7 +187,7 @@ router.delete("/delete_blog/:id", checkAuth, async (req, res) => {
           return res.status(500).send({
             errors: [
               {
-                msg: "Blog image deletion error",
+                msg: "Can't Delete Blog Image",
               },
             ],
           });
@@ -254,7 +254,7 @@ router.put(
           return res.status(500).send({
             errors: [
               {
-                msg: " Old blog image deletion error",
+                msg: "Blog Image Updating Error",
               },
             ],
           });

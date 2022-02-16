@@ -27,6 +27,10 @@ const authorSchema = new Schema(
       type: String,
       required: true,
     },
+    secretCode: {
+      type: Schema.Types.ObjectId,
+      ref: "secretcodes",
+    },
     profilePic: String,
   },
   { timestamps: true }

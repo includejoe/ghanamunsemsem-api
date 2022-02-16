@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 
 const authRoutes = require("./routes/authRoutes");
 const blogRoutes = require("./routes/blogRoutes");
+// const GenerateRandomSecretCode = require("./middleware/generateRandomSecretCode");
 
 // express app
 const app = express();
@@ -31,6 +32,9 @@ mongoose
 app.get("/", (req, res) => {
   res.send("Hi, this is local host port 8000");
 });
+
+// Generate Code
+// GenerateRandomSecretCode();
 
 // static files
 app.use("/uploads", express.static("uploads"));

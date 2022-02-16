@@ -6,6 +6,7 @@ const JWT = require("jsonwebtoken");
 
 const upload = require("../middleware/uploadAuthorProfileImage");
 const Author = require("../models/author");
+const SecretCode = require("../models/secretCode");
 const { SECRET_KEY } = require("../config");
 const checkAuth = require("../middleware/checkAuth");
 
@@ -59,6 +60,7 @@ router.post(
     check("password", "Your password must be more than 6 characters").isLength({
       min: 6,
     }),
+    check("secretCode", "Secret Code must not be empty").notEmpty(),
   ],
   async (req, res) => {
     try {
@@ -70,6 +72,7 @@ router.post(
         email,
         password,
         confirmPassword,
+        secretCode,
       } = req.body;
 
       // validate input
@@ -80,11 +83,34 @@ router.post(
         });
       }
 
+      // check secret code
+      const code = await SecretCode.findOne({ code: secretCode });
+      if (!code) {
+        return res.status(422).send({
+          errors: [
+            {
+              msg: "Invalid Secret Code",
+            },
+          ],
+        });
+      }
+
+      if (code.used === true) {
+        return res.status(422).send({
+          errors: [
+            {
+              msg: "This Secret Code has Already Been Used",
+            },
+          ],
+        });
+      }
+
+      // check if passwords match
       if (password !== confirmPassword) {
         return res.status(422).send({
           errors: [
             {
-              msg: "Passwords must match",
+              msg: "Passwords Must Match",
             },
           ],
         });
@@ -96,7 +122,7 @@ router.post(
         return res.status(422).send({
           errors: [
             {
-              msg: "This author already exists",
+              msg: "This Author Already Exists",
             },
           ],
         });
@@ -111,9 +137,15 @@ router.post(
         dob,
         email,
         hashedPassword,
+        secretCode: code.id,
       });
 
       const createdAuthor = await newAuthor.save();
+
+      // update secret code used status
+      await SecretCode.findByIdAndUpdate(code.id, {
+        used: true,
+      });
 
       const token = generateToken(createdAuthor);
 
@@ -159,7 +191,7 @@ router.post(
         return res.status(422).send({
           errors: [
             {
-              msg: "Invalid credentials",
+              msg: "Invalid Credentials",
             },
           ],
         });
@@ -171,7 +203,7 @@ router.post(
         return res.status(422).send({
           errors: [
             {
-              msg: "Invalid credentials",
+              msg: "Invalid Credentials",
             },
           ],
         });
@@ -246,14 +278,14 @@ router.put(
 
       // if new profile pic submitted
       if (req.file) {
-        if (author.profilePic) {
+        if (author?.profilePic) {
           const imageLink = "." + author.profilePic;
           fs.unlink(imageLink, (err) => {
             if (err) {
               return res.status(500).send({
                 errors: [
                   {
-                    msg: "Old profile picture deletion error",
+                    msg: "Old Profile Picture Updating Error",
                   },
                 ],
               });
@@ -270,7 +302,7 @@ router.put(
               return res.status(422).send({
                 errors: [
                   {
-                    msg: "New Passwords must match",
+                    msg: "New Passwords Must Match",
                   },
                 ],
               });
@@ -279,7 +311,7 @@ router.put(
             return res.status(422).send({
               errors: [
                 {
-                  msg: "Old password is incorrect",
+                  msg: "Old Password is Incorrect",
                 },
               ],
             });
@@ -319,7 +351,7 @@ router.put(
               return res.status(422).send({
                 errors: [
                   {
-                    msg: "New Passwords must match",
+                    msg: "New Passwords Must Match",
                   },
                 ],
               });
@@ -328,7 +360,7 @@ router.put(
             return res.status(422).send({
               errors: [
                 {
-                  msg: "Old password is incorrect",
+                  msg: "Old Password is Incorrect",
                 },
               ],
             });

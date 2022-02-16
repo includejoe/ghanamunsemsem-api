@@ -2,6 +2,10 @@
   "name": "server",
   "version": "1.0.0",
   "main": "index.js",
+  "scripts": {
+    "dev": "nodemon app",
+    "serve": "node app"
+  },
   "license": "MIT",
   "dependencies": {
     "bcrypt": "^5.0.1",
