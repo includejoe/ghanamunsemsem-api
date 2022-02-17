@@ -7,9 +7,70 @@ const checkAuth = require("../middleware/checkAuth");
 const upload = require("../middleware/uploadBlogImages");
 
 // get all blogs
-router.get("/", async (req, res) => {
+// router.get("/", async (req, res) => {
+//   try {
+//     const blogs = await Blog.find().sort({ createdAt: -1 });
+//     res.json({ blogs });
+//   } catch (err) {
+//     res.status(500).send({
+//       errors: [
+//         {
+//           msg: "Internal Server Error",
+//         },
+//       ],
+//     });
+//     throw new Error(err);
+//   }
+// });
+
+// get a specific authors blogs
+router.get("/my_blogs", checkAuth, async (req, res) => {
   try {
-    const blogs = await Blog.find().sort({ createdAt: -1 });
+    const author = req.author.id;
+    const blogs = await Blog.find({ author }).sort({ updatedAt: -1 });
+
+    if (blogs.length <= 0) {
+      return res.status(400).send({
+        errors: [
+          {
+            msg: "No Blogs Found, Create a New Blog to Show here.",
+          },
+        ],
+      });
+    }
+    res.json({ blogs });
+  } catch (err) {
+    res.status(500).send({
+      errors: [
+        {
+          msg: "Internal Server Error",
+        },
+      ],
+    });
+    throw new Error(err);
+  }
+});
+
+// get a specific author's blogs in categories
+router.get("/category/:category", checkAuth, async (req, res) => {
+  try {
+    const { category } = req.params;
+    const author = req.author.id;
+
+    const blogs = await Blog.find({ category, author }).sort({
+      createdAt: -1,
+    });
+
+    if (blogs.length <= 0) {
+      return res.status(400).send({
+        errors: [
+          {
+            msg: "No Blogs in this Category.",
+          },
+        ],
+      });
+    }
+
     res.json({ blogs });
   } catch (err) {
     res.status(500).send({
@@ -24,7 +85,7 @@ router.get("/", async (req, res) => {
 });
 
 // get blog details
-router.get("/blog_details/:id", async (req, res) => {
+router.get("/blog_details/:id", checkAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const blog = await Blog.findById(id);
@@ -40,67 +101,6 @@ router.get("/blog_details/:id", async (req, res) => {
     }
 
     res.json({ blog });
-  } catch (err) {
-    res.status(500).send({
-      errors: [
-        {
-          msg: "Internal Server Error",
-        },
-      ],
-    });
-    throw new Error(err);
-  }
-});
-
-// blog categories
-router.get("/category/:category", async (req, res) => {
-  try {
-    const { category } = req.params;
-    const blogs = await Blog.find({ category }).sort({
-      createdAt: -1,
-    });
-
-    if (!blogs) {
-      return res.status(404).send({
-        errors: [
-          {
-            msg: "No Blogs in this Category",
-          },
-        ],
-      });
-    }
-
-    res.json({ blogs });
-  } catch (err) {
-    res.status(500).send({
-      errors: [
-        {
-          msg: "Internal Server Error",
-        },
-      ],
-    });
-    throw new Error(err);
-  }
-});
-
-// PROTECTED ROUTES
-
-// get a specific authors blogs
-router.get("/my_blogs", checkAuth, async (req, res) => {
-  try {
-    const author = req.author.id;
-    const blogs = await Blog.find({ author }).sort({ updatedAt: -1 });
-
-    if (!blogs) {
-      return res.status(422).send({
-        errors: [
-          {
-            msg: "No Blogs Found",
-          },
-        ],
-      });
-    }
-    res.json({ blogs });
   } catch (err) {
     res.status(500).send({
       errors: [
