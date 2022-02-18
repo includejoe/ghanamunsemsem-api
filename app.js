@@ -6,6 +6,8 @@ const authRoutes = require("./routes/authRoutes");
 const blogRoutes = require("./routes/blogRoutes");
 // const GenerateRandomSecretCode = require("./middleware/generateRandomSecretCode");
 
+const PORT = process.env.PORT || 8000;
+
 // express app
 const app = express();
 
@@ -22,10 +24,10 @@ mongoose
   .connect(dbURI, { useNewUrlParser: true })
   .then(() => {
     console.log("MongoDB Connected");
-    return app.listen({ port: 8000 });
+    return app.listen({ port: PORT });
   })
   .then(() => {
-    console.log(`Server running at http://localhost:8000`);
+    console.log(`Server running at http://localhost:${PORT}`);
   })
   .catch((err) => console.log(err));
 
