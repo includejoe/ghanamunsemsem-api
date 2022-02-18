@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon app",
-    "serve": "node app"
+    "dev": "nodemon app.js",
+    "start": "node app.js"
   },
   "license": "MIT",
   "dependencies": {
@@ -16,5 +16,8 @@
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.1.8",
     "multer": "^1.4.4"
+  },
+  "engines": {
+    "node": "14.17.5"
   }
 }
