@@ -32,7 +32,7 @@ mongoose
   .catch((err) => console.log(err));
 
 app.get("/", (req, res) => {
-  res.send("Hi, this is local host port 8000");
+  res.send("Hi, this is ghanamunsemsem API");
 });
 
 // Generate Code
