@@ -28,7 +28,7 @@ const authorSchema = new Schema(
       required: true,
     },
     secretCode: {
-      type: Schema.Types.ObjectId,
+      type: String,
       ref: "secretcodes",
     },
     profilePic: String,

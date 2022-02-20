@@ -12,7 +12,7 @@ const secretCodeSchema = new Schema(
       required: true,
     },
     by: {
-      type: Schema.Types.ObjectId,
+      type: String,
       ref: "authors",
     },
   },

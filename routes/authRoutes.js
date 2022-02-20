@@ -137,7 +137,7 @@ router.post(
         dob,
         email,
         hashedPassword,
-        secretCode: code.id,
+        secretCode: code.code,
       });
 
       const createdAuthor = await newAuthor.save();
@@ -145,7 +145,7 @@ router.post(
       // update secret code
       await SecretCode.findByIdAndUpdate(code.id, {
         used: true,
-        by: createdAuthor.id,
+        by: createdAuthor.email,
       });
 
       const token = generateToken(createdAuthor);
