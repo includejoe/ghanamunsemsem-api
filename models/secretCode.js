@@ -11,6 +11,10 @@ const secretCodeSchema = new Schema(
       type: Boolean,
       required: true,
     },
+    by: {
+      type: Schema.Types.ObjectId,
+      ref: "authors",
+    },
   },
   { timestamps: true }
 );

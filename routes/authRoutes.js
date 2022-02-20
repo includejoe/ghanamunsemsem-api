@@ -142,9 +142,10 @@ router.post(
 
       const createdAuthor = await newAuthor.save();
 
-      // update secret code used status
+      // update secret code
       await SecretCode.findByIdAndUpdate(code.id, {
         used: true,
+        by: createdAuthor.id,
       });
 
       const token = generateToken(createdAuthor);
